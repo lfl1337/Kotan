@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "hdc-reservoir-mackey-glass"
+version = "0.1.0"
+description = "Vergleich von Ridge Regression und HDC als ESN-Readout auf Mackey-Glass"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

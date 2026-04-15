@@ -1,0 +1,53 @@
+# === Claude Code / AI Tools ===
+.claude/
+.claude.*
+CLAUDE.md
+claude_logs/
+.cursorrules
+.cursor/
+.aider*
+.copilot/
+
+# === Superpowers / Plugins ===
+docs/superpowers/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+build/
+dist/
+
+# === Virtual Environments ===
+venv/
+.venv/
+env/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Jupyter ===
+.ipynb_checkpoints/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Environment / Secrets ===
+.env
+*.env
+.env.*
+
+# === Testing ===
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
