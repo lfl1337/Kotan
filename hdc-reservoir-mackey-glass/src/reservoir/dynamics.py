@@ -35,5 +35,7 @@ def scale_spectral_radius(
 def compute_spectral_radius(matrix: sparse.csr_matrix) -> float:
     """Berechnet den Spektralradius (größter Eigenwert-Betrag) einer Matrix."""
     # k=1: nur der größte Eigenwert — schneller als full eigendecomposition
-    eigenvalues = eigs(matrix.astype(float), k=1, which="LM", return_eigenvectors=False)
+    # v0: fixer Startvektor für ARPACK → deterministisches Ergebnis
+    v0 = np.ones(matrix.shape[0])
+    eigenvalues = eigs(matrix.astype(float), k=1, which="LM", return_eigenvectors=False, v0=v0)
     return float(np.max(np.abs(eigenvalues)))
