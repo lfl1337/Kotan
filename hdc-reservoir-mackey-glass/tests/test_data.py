@@ -39,4 +39,8 @@ def test_prepare_dataset_correct_lengths():
 def test_prepare_dataset_no_overlap():
     data = generate_mackey_glass(n_steps=1000)
     X_train, _, X_test, _ = prepare_dataset(data, train_ratio=0.8)
-    assert len(X_train) == pytest.approx(len(X_test) * 4, abs=2)
+    n_samples = len(data) - 1  # prediction_horizon=1
+    expected_train = int(n_samples * 0.8)
+    expected_test = n_samples - expected_train
+    assert len(X_train) == expected_train
+    assert len(X_test) == expected_test
