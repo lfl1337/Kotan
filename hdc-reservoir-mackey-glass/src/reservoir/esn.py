@@ -5,6 +5,9 @@ mit tanh-Aktivierung und sparser, zufälliger Konnektivität.
 """
 
 import numpy as np
+from scipy import sparse
+
+from src.reservoir.dynamics import generate_sparse_matrix, scale_spectral_radius
 
 
 class EchoStateNetwork:
@@ -18,39 +21,35 @@ class EchoStateNetwork:
         input_scaling: float = 1.0,
         seed: int | None = None,
     ) -> None:
-        """Initialisiert das Reservoir.
+        self.n_reservoir = n_reservoir
+        rng = np.random.default_rng(seed)
+        # Separater seed für W_input (reproduzierbar, unabhängig von W_reservoir)
+        seed_input = int(rng.integers(0, 2**31))
+        seed_reservoir = int(rng.integers(0, 2**31))
 
-        Args:
-            n_reservoir: Anzahl der Neuronen im Reservoir.
-            spectral_radius: Spektralradius der Reservoir-Gewichtsmatrix.
-            sparsity: Anteil der nicht-null Verbindungen (0 bis 1).
-            input_scaling: Skalierungsfaktor für Eingabegewichte.
-            seed: Zufallsseed für Reproduzierbarkeit.
-        """
-        raise NotImplementedError
+        W_raw = generate_sparse_matrix(n_reservoir, sparsity, seed=seed_reservoir)
+        self.W_reservoir = scale_spectral_radius(W_raw, spectral_radius)
+
+        rng_input = np.random.default_rng(seed_input)
+        self.W_input = rng_input.uniform(-1, 1, n_reservoir) * input_scaling
+
+        self.state = np.zeros(n_reservoir)
 
     def step(self, input_value: float) -> np.ndarray:
-        """Führt einen Zeitschritt aus und gibt den Reservoir-Zustand zurück.
-
-        Args:
-            input_value: Eingabewert für diesen Zeitschritt.
-
-        Returns:
-            Reservoir-Zustandsvektor der Dimension n_reservoir.
-        """
-        raise NotImplementedError
+        """Ein Zeitschritt: x(t+1) = tanh(W_input * u + W_reservoir @ x(t))"""
+        pre_activation = self.W_input * input_value + self.W_reservoir @ self.state
+        if sparse.issparse(pre_activation):
+            pre_activation = pre_activation.toarray().flatten()
+        self.state = np.tanh(pre_activation)
+        return self.state.copy()
 
     def run(self, inputs: np.ndarray) -> np.ndarray:
-        """Verarbeitet eine Eingabesequenz und gibt alle Zustände zurück.
-
-        Args:
-            inputs: 1D-Array der Eingabesequenz (Länge T).
-
-        Returns:
-            2D-Array der Reservoir-Zustände (T x n_reservoir).
-        """
-        raise NotImplementedError
+        """Verarbeitet eine Eingabesequenz, gibt alle Zustände zurück (T x n_reservoir)."""
+        states = np.zeros((len(inputs), self.n_reservoir))
+        for t, u in enumerate(inputs):
+            states[t] = self.step(u)
+        return states
 
     def reset(self) -> None:
-        """Setzt den internen Zustand des Reservoirs auf Null zurück."""
-        raise NotImplementedError
+        """Setzt den internen Zustand auf Null zurück."""
+        self.state = np.zeros(self.n_reservoir)
