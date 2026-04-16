@@ -1,3 +1,6 @@
+# === Git Worktrees ===
+.worktrees/
+
 # === Claude Code / AI Tools ===
 .claude/
 .claude.*
