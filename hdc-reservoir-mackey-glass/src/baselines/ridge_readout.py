@@ -6,6 +6,7 @@ Ridge Regression ist der Standard-Readout für Echo State Networks.
 """
 
 import numpy as np
+from scipy import linalg
 
 
 class RidgeReadout:
@@ -15,45 +16,23 @@ class RidgeReadout:
     Wird analytisch gelöst (kein iteratives Training nötig).
     """
 
-    def __init__(self, alpha: float = 1.0) -> None:
-        """Initialisiert den Ridge-Readout.
-
-        Args:
-            alpha: Regularisierungsparameter (L2-Penalty).
-        """
-        raise NotImplementedError
+    def __init__(self, alpha: float = 1e-6) -> None:
+        self.alpha = alpha
 
     def fit(self, states: np.ndarray, targets: np.ndarray) -> None:
-        """Trainiert den Readout auf Reservoir-Zuständen.
-
-        Löst die Ridge-Regression analytisch:
-        W = (X^T X + alpha I)^{-1} X^T y
-
-        Args:
-            states: Reservoir-Zustände (T x n_reservoir).
-            targets: Zielwerte (T,).
-        """
-        raise NotImplementedError
+        """Trainiert den Readout analytisch: W = (X^T X + alpha I)^{-1} X^T y"""
+        n_features = states.shape[1]
+        A = states.T @ states + self.alpha * np.eye(n_features)
+        b = states.T @ targets
+        # linalg.solve ist numerisch stabiler als explizite Invertierung
+        self.W_out = linalg.solve(A, b)
 
     def predict(self, states: np.ndarray) -> np.ndarray:
-        """Berechnet Vorhersagen für gegebene Reservoir-Zustände.
-
-        Args:
-            states: Reservoir-Zustände (T x n_reservoir).
-
-        Returns:
-            Vorhersagewerte (T,).
-        """
-        raise NotImplementedError
+        """Vorhersagen: y_pred = X @ W_out"""
+        return states @ self.W_out
 
     def score(self, states: np.ndarray, targets: np.ndarray) -> float:
-        """Berechnet den NRMSE (Normalized Root Mean Squared Error).
-
-        Args:
-            states: Reservoir-Zustände (T x n_reservoir).
-            targets: Zielwerte (T,).
-
-        Returns:
-            NRMSE-Wert (niedriger ist besser).
-        """
-        raise NotImplementedError
+        """NRMSE = sqrt(mean((y_pred - y)^2)) / std(y)"""
+        predictions = self.predict(states)
+        rmse = np.sqrt(np.mean((predictions - targets) ** 2))
+        return float(rmse / np.std(targets))
