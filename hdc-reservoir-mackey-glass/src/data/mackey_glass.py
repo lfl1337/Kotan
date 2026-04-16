@@ -40,7 +40,20 @@ def generate_mackey_glass(
     Returns:
         1D-Array der Mackey-Glass-Zeitreihe (Länge n_steps).
     """
-    raise NotImplementedError
+    laenge = tau + warmup + n_steps
+    x = np.ones(laenge) * initial_value
+
+    for t in range(tau, laenge - 1):
+        x_alt = x[t - tau]
+        x_jetzt = x[t]
+
+        zufluss = beta * x_alt / (1 + x_alt**n)
+        abfluss = gamma * x_jetzt
+        veraenderung = zufluss - abfluss
+
+        x[t + 1] = x_jetzt + dt * veraenderung
+
+    return x[-n_steps:]
 
 
 def prepare_dataset(
@@ -58,4 +71,13 @@ def prepare_dataset(
     Returns:
         Tuple aus (X_train, y_train, X_test, y_test).
     """
-    raise NotImplementedError
+    X = timeseries[:-prediction_horizon]
+    y = timeseries[prediction_horizon:]
+
+    trenn = int(len(X) * train_ratio)
+    X_train = X[:trenn]
+    y_train = y[:trenn]
+    X_test = X[trenn:]
+    y_test = y[trenn:]
+
+    return X_train, y_train, X_test, y_test
